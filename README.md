@@ -1,2 +1,2 @@
 # devops
-HSE course 
+HSE course name : Devops
