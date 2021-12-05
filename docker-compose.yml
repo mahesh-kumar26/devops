@@ -1,0 +1,30 @@
+version: "3.2"
+
+services:
+  mysqldb:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user
+
+    volumes:
+      - ./scripts:/docker-entrypoint-initdb.d
+
+  webapp:
+    build: .
+    depends_on:
+      - mysqldb
+
+    restart: on-failure
+    environment:
+      DB_HOST: localhost
+      DB_NAME: mydb
+      DB_USERNAME: user
+      DB_PASSWORD: user
+    ports:
+      - 8080:8080
+    command: ["./wait-for-db.sh", "./run-webapp.sh"]
