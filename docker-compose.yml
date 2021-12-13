@@ -1,23 +1,25 @@
 version: "3.2"
 
 services:
-  mysqldb:
-    image: mysql
-    command: --default-authentication-plugin=mysql_native_password
+  database:
+    image: mysql:5.7
+    ports:
+      - 3306:3306
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: mydb
-      MYSQL_USER: user
-      MYSQL_PASSWORD: user
+      MYSQL_DATABASE: DostavimVse
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
 
     volumes:
       - ./scripts:/docker-entrypoint-initdb.d
+      - ./mysql-data:/var/lib/mysql
 
   webapp:
-    build: .
+    build: ./DostavimVse
     depends_on:
-      - mysqldb
+      - database
 
     restart: on-failure
     environment:
@@ -26,5 +28,6 @@ services:
       DB_USERNAME: user
       DB_PASSWORD: user
     ports:
-      - 8080:8080
-    command: ["./wait-for-db.sh", "./run-webapp.sh"]
+      - 7070:7070
+
+    entrypoint: ["./wait.sh", "database:3306", "./run.sh"]
