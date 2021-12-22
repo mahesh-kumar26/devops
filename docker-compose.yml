@@ -1,33 +1,45 @@
-version: "3.2"
-
+version: "3"
 services:
-  database:
+  db:
     image: mysql:5.7
+    networks:
+      - web-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_PASSWORD=admin
+      - MYSQL_DATABASE=dostavim
     ports:
-      - 3306:3306
+      - 33306:3306
     restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: DostavimVse
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-
+    healthcheck:
+      interval: 5s
+      timeout: 1s
+      retries: 30
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-padmin",
+        ]
     volumes:
-      - ./scripts:/docker-entrypoint-initdb.d
       - ./mysql-data:/var/lib/mysql
+      - ./scripts/CREATE.sql:/docker-entrypoint-initdb.d/initdb.sql
 
-  webapp:
+  web-app:
     build: ./DostavimVse
-    depends_on:
-      - database
-
-    restart: on-failure
-    environment:
-      DB_HOST: localhost
-      DB_NAME: mydb
-      DB_USERNAME: user
-      DB_PASSWORD: user
     ports:
-      - 7070:7070
+      - 18080:8080
+    networks:
+      - web-db
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
 
-    entrypoint: ["./wait.sh", "database:3306", "./run.sh"]
+networks:
+  web-db:
